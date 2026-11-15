@@ -250,16 +250,17 @@ namespace KindFall.Player.Princess
 
             if (keyboard != null)
             {
-                if (keyboard.aKey.isPressed || keyboard.leftArrowKey.isPressed) moveX -= 1f;
-                if (keyboard.dKey.isPressed || keyboard.rightArrowKey.isPressed) moveX += 1f;
-                if (keyboard.wKey.isPressed || keyboard.upArrowKey.isPressed) moveY += 1f;
-                if (keyboard.sKey.isPressed || keyboard.downArrowKey.isPressed) moveY -= 1f;
+                // 1. Oyuncu (Prenses) - Klavye sol tarafı (Ok tuşları 2. Oyuncu / Ejderha içindir)
+                if (keyboard.aKey.isPressed) moveX -= 1f;
+                if (keyboard.dKey.isPressed) moveX += 1f;
+                if (keyboard.wKey.isPressed) moveY += 1f;
+                if (keyboard.sKey.isPressed) moveY -= 1f;
 
                 JumpInputDown = keyboard.spaceKey.wasPressedThisFrame;
                 JumpInputHeld = keyboard.spaceKey.isPressed;
 
-                AttackInputDown = keyboard.jKey.wasPressedThisFrame || (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame);
-                ShieldInputHeld = keyboard.kKey.isPressed || (Mouse.current != null && Mouse.current.rightButton.isPressed);
+                AttackInputDown = keyboard.fKey.wasPressedThisFrame || keyboard.jKey.wasPressedThisFrame;
+                ShieldInputHeld = keyboard.gKey.isPressed || keyboard.kKey.isPressed;
             }
 
             if (gamepad != null)
