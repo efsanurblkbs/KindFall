@@ -49,8 +49,8 @@ namespace KindFall.Player.Princess
                 return;
             }
 
-            // Kalkan / Parry girdisi
-            if (controller.ShieldInputHeld)
+            // Kalkan / Parry girdisi (Halihazırda kalkan siperinde değilsek yeni bir Parry penceresi başlat)
+            if (this != controller.ShieldState && controller.ShieldInputHeld)
             {
                 stateMachine.ChangeState(controller.ParryState);
                 return;

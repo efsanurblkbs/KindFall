@@ -25,6 +25,8 @@ namespace KindFall.Player.Princess
         {
             base.LogicUpdate();
 
+            if (stateMachine.CurrentState != this) return;
+
             // Kalkan tuşu bırakıldığında zemin durumuna dön
             if (!controller.ShieldInputHeld)
             {
