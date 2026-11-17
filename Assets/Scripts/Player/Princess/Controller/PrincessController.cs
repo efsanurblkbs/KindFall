@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
 #endif
@@ -38,7 +39,7 @@ namespace KindFall.Player.Princess
         #region Jump & Fall Parameters
         [Header("Dikey Hareket & Yerçekimi")]
         [Tooltip("İlk zıplama dikey fırlatma hızı")]
-        [SerializeField] private float jumpForce = 14f;
+        [SerializeField] private float jumpForce = 9.5f;
 
         [Tooltip("Düşerken uygulanan yerçekimi ölçeği")]
         [SerializeField] private float fallGravityScale = 3.5f;
@@ -179,6 +180,10 @@ namespace KindFall.Player.Princess
         private float coyoteTimer;
         private float jumpBufferTimer;
         private float inputLockEndTime;
+        private Coroutine freezeCoroutine;
+
+        public bool IsFrozen { get; private set; }
+        public bool IsDead { get; private set; }
         #endregion
 
         #region Unity Lifecycle
@@ -202,6 +207,16 @@ namespace KindFall.Player.Princess
 
         private void Update()
         {
+            if (IsDead || IsFrozen)
+            {
+                MoveInput = Vector2.zero;
+                JumpInputDown = false;
+                JumpInputHeld = false;
+                AttackInputDown = false;
+                ShieldInputHeld = false;
+                return;
+            }
+
             UpdateInput();
             UpdateTimers();
 
@@ -210,6 +225,18 @@ namespace KindFall.Player.Princess
 
         private void FixedUpdate()
         {
+            if (IsDead)
+            {
+                if (rb != null) rb.linearVelocity = Vector2.zero;
+                return;
+            }
+
+            if (IsFrozen)
+            {
+                if (rb != null) rb.linearVelocity = new Vector2(0f, Mathf.Min(0f, rb.linearVelocityY));
+                return;
+            }
+
             StateMachine.CurrentState?.PhysicsUpdate();
         }
         #endregion
@@ -633,6 +660,79 @@ namespace KindFall.Player.Princess
             }
 
             OnDamageTaken?.Invoke(finalDamage, IsShieldActive);
+        }
+
+        /// <summary>
+        /// Prensesi belirtilen süre boyunca dondurur (hareketi keser ve buz mavisi renk uygular).
+        /// </summary>
+        /// <param name="duration">Donma süresi (sn).</param>
+        public void Freeze(float duration = 5f)
+        {
+            if (IsDead) return;
+
+            if (freezeCoroutine != null)
+            {
+                StopCoroutine(freezeCoroutine);
+            }
+
+            freezeCoroutine = StartCoroutine(FreezeRoutine(duration));
+        }
+
+        private IEnumerator FreezeRoutine(float duration)
+        {
+            IsFrozen = true;
+            if (rb != null) rb.linearVelocity = new Vector2(0f, Mathf.Min(0f, rb.linearVelocityY));
+            if (anim != null) anim.speed = 0f;
+
+            Color iceColor = new Color(0.15f, 0.50f, 0.95f, 1f);
+            if (spriteRenderer != null) spriteRenderer.color = iceColor;
+
+            float elapsed = 0f;
+            float safeDuration = Mathf.Max(0.01f, duration);
+            while (elapsed < safeDuration)
+            {
+                elapsed += Time.deltaTime;
+                if (spriteRenderer != null)
+                {
+                    spriteRenderer.color = Color.Lerp(iceColor, Color.white, Mathf.Clamp01(elapsed / safeDuration));
+                }
+
+                yield return null;
+            }
+
+            IsFrozen = false;
+            if (anim != null) anim.speed = 1f;
+            if (spriteRenderer != null) spriteRenderer.color = Color.white;
+            freezeCoroutine = null;
+        }
+
+        /// <summary>
+        /// Prenses öldüğünde hareketi durdurur ve aktif sahneyi başa sarar.
+        /// </summary>
+        public void Die()
+        {
+            if (IsDead) return;
+
+            IsDead = true;
+            IsFrozen = false;
+
+            if (freezeCoroutine != null)
+            {
+                StopCoroutine(freezeCoroutine);
+                freezeCoroutine = null;
+            }
+
+            if (rb != null) rb.linearVelocity = Vector2.zero;
+            if (anim != null) anim.speed = 0f;
+            if (spriteRenderer != null) spriteRenderer.color = new Color(1f, 0.25f, 0.25f, 1f);
+
+            StartCoroutine(RestartSceneRoutine());
+        }
+
+        private IEnumerator RestartSceneRoutine()
+        {
+            yield return new WaitForSeconds(0.25f);
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         }
 
         private IEnumerator HitStopRoutine(float duration)

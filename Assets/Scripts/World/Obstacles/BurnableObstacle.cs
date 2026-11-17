@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
 using KindFall.Core.Interfaces;
+using KindFall.Player.Princess;
 
 namespace KindFall.World.Obstacles
 {
@@ -407,6 +408,34 @@ namespace KindFall.World.Obstacles
             }
 
             return list;
+        }
+
+        private void OnCollisionEnter2D(Collision2D collision)
+        {
+            HandlePrincessContact(collision.collider);
+        }
+
+        private void OnTriggerEnter2D(Collider2D other)
+        {
+            HandlePrincessContact(other);
+        }
+
+        private void HandlePrincessContact(Collider2D other)
+        {
+            if (IsBurned || isBurning || other == null) return;
+
+            PrincessController princess = other.GetComponent<PrincessController>()
+                                        ?? other.GetComponentInParent<PrincessController>();
+            if (princess == null) return;
+
+            if (obstacleType == ObstacleType.Vine)
+            {
+                princess.Die();
+            }
+            else if (obstacleType == ObstacleType.Ice)
+            {
+                princess.Freeze(5f);
+            }
         }
     }
 }

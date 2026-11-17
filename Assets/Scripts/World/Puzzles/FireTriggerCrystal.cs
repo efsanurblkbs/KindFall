@@ -274,13 +274,13 @@ namespace KindFall.World.Puzzles
                 pos.y = Mathf.Max(floorY, pos.y + velY * Time.deltaTime);
                 dropObj.transform.position = pos;
 
-                // Prenses teması kontrolü (Kalkan veya Parry ile karşılanabilir)
+                // Prenses teması kontrolü (Lav damlası değerse Prenses ölür)
                 Collider2D[] overlaps = Physics2D.OverlapCircleAll(pos, 0.14f);
                 for (int i = 0; i < overlaps.Length; i++)
                 {
                     if (overlaps[i].TryGetComponent(out PrincessController princess))
                     {
-                        princess.TakeDamage(lavaDamage);
+                        princess.Die();
                         hitPrincess = true;
                         break;
                     }
