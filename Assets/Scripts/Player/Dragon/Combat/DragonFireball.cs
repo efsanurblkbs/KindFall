@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using KindFall.Core.Interfaces;
 
 namespace KindFall.Player.Dragon
 {
@@ -84,6 +85,12 @@ namespace KindFall.Player.Dragon
             if (hitLayer.value == 0 || ((1 << other.gameObject.layer) & hitLayer.value) != 0)
             {
                 hasHit = true;
+
+                if (other.TryGetComponent(out IBurnable burnable))
+                {
+                    burnable.Burn(damage);
+                }
+
                 OnFireballHit?.Invoke(other, damage);
                 Destroy(gameObject);
             }

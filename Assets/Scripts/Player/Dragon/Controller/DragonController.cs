@@ -27,16 +27,16 @@ namespace KindFall.Player.Dragon
         #region Flight & Glide Parameters
         [Header("Havada Süzülme & Uçuş Fiziği")]
         [Tooltip("Normal havada süzülme (Glide) hızı")]
-        [SerializeField] private float glideSpeed = 7.5f;
+        [SerializeField] private float glideSpeed = 6.2f;
 
-        [Tooltip("Space basılıyken hızlı uçuş (Fly Boost) hızı")]
-        [SerializeField] private float flyBoostSpeed = 11.5f;
+        [Tooltip("Right Shift basılıyken hızlı uçuş (Fly Boost) hızı")]
+        [SerializeField] private float flyBoostSpeed = 10.0f;
 
         [Tooltip("Stamina tükendiğinde (Exhausted) uygulanacak hız çarpanı")]
         [SerializeField] private float exhaustedSpeedMultiplier = 0.55f;
 
-        [Tooltip("Yön tuşları bırakıldığında havada yavaşlama sönümlemesi")]
-        [SerializeField] private float airDamping = 30f;
+        [Tooltip("Yön tuşları bırakıldığında havada durma hassasiyeti")]
+        [SerializeField] private float airDamping = 120f;
         #endregion
 
         #region Ground Clearance (Never Touch Ground)
@@ -376,6 +376,14 @@ namespace KindFall.Player.Dragon
             rb.linearVelocity = velocity;
         }
 
+        /// <summary>
+        /// Tuş bırakıldığında kaymayı önlemek için hızı anında sıfırlar.
+        /// </summary>
+        public void StopVelocity()
+        {
+            rb.linearVelocity = Vector2.zero;
+        }
+
         public void ApplyAirDamping()
         {
             if (rb.linearVelocity.sqrMagnitude < 0.01f)
@@ -496,6 +504,7 @@ namespace KindFall.Player.Dragon
             }
 
             carriedPrincess.transform.position = GetCarryAnchorPosition();
+            if (anim != null) anim.SetBool("IsCarrying", true);
             OnPrincessCarryChanged?.Invoke(true, carriedPrincess);
             return true;
         }
@@ -524,6 +533,7 @@ namespace KindFall.Player.Dragon
                 released.StateMachine.ChangeState(released.FallState);
             }
 
+            if (anim != null) anim.SetBool("IsCarrying", false);
             OnPrincessCarryChanged?.Invoke(false, released);
         }
 

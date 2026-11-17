@@ -17,6 +17,7 @@ namespace KindFall.Player.Dragon
         {
             base.Enter();
             controller.SetZeroGravity();
+            controller.StopVelocity();
         }
 
         public override void LogicUpdate()
