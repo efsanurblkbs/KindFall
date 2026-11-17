@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using KindFall.Core.Interfaces;
 
 namespace KindFall.Player.Princess
 {
@@ -37,10 +38,21 @@ namespace KindFall.Player.Princess
         private void OnTriggerEnter2D(Collider2D other)
         {
             // Belirlenen katmandaki bir objeyle temas edildi mi?
-            if (((1 << other.gameObject.layer) & hitLayer.value) != 0)
+            if (((1 << other.gameObject.layer) & hitLayer.value) == 0)
             {
-                OnHitTarget?.Invoke(other, damage, knockbackForce);
+                return;
             }
+
+            Vector2 hitDirection = (other.transform.position - transform.position).normalized;
+            if (hitDirection.sqrMagnitude < 0.001f)
+            {
+                hitDirection = transform.lossyScale.x >= 0f ? Vector2.right : Vector2.left;
+            }
+
+            IDamageable damageable = other.GetComponentInParent<IDamageable>();
+            damageable?.TakeDamage(damage, hitDirection);
+
+            OnHitTarget?.Invoke(other, damage, knockbackForce);
         }
     }
 }
