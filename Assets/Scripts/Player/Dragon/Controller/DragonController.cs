@@ -40,14 +40,20 @@ namespace KindFall.Player.Dragon
         #endregion
 
         #region Ground Clearance (Never Touch Ground)
-        [Header("Zemin Mesafesi (Yere Temas Etmeme)")]
+        [Header("Zemin Mesafesi & Ekran Sınırı")]
         [Tooltip("Ejderhanın yerden koruyacağı minimum yükseklik boşluğu")]
-        [SerializeField] private float minGroundClearance = 0.35f;
+        [SerializeField] private float minGroundClearance = 0.15f;
 
         [Tooltip("Zemin tarama kutusu boyutu")]
         [SerializeField] private Vector2 groundCheckSize = new Vector2(0.7f, 0.1f);
 
         [SerializeField] private LayerMask groundLayer;
+
+        [Tooltip("True ise Ejderha ana kamera çerçevesinin dışına çıkamaz")]
+        [SerializeField] private bool clampToCameraBounds = true;
+
+        [Tooltip("Ekran kenarlarından bırakılacak iç boşluk (birim)")]
+        [SerializeField] private float screenBoundaryPadding = 0.55f;
         #endregion
 
         #region Stamina Parameters
@@ -195,6 +201,7 @@ namespace KindFall.Player.Dragon
         {
             StateMachine.CurrentState?.PhysicsUpdate();
             EnforceGroundClearance();
+            EnforceCameraBounds();
             UpdateCarryPosition();
         }
 
@@ -414,6 +421,38 @@ namespace KindFall.Player.Dragon
             if (rb.linearVelocityY < 0f && IsNearGround())
             {
                 rb.linearVelocityY = 0f;
+            }
+        }
+
+        private void EnforceCameraBounds()
+        {
+            if (!clampToCameraBounds) return;
+            Camera cam = Camera.main;
+            if (cam == null || !cam.orthographic) return;
+
+            float halfH = Mathf.Max(0.5f, cam.orthographicSize - screenBoundaryPadding);
+            float halfW = Mathf.Max(0.5f, (cam.orthographicSize * cam.aspect) - screenBoundaryPadding);
+
+            Vector3 camPos = cam.transform.position;
+            float minX = camPos.x - halfW;
+            float maxX = camPos.x + halfW;
+            float minY = camPos.y - halfH;
+            float maxY = camPos.y + halfH;
+
+            Vector2 pos = rb.position;
+            Vector2 vel = rb.linearVelocity;
+            bool clamped = false;
+
+            if (pos.x < minX) { pos.x = minX; if (vel.x < 0f) vel.x = 0f; clamped = true; }
+            else if (pos.x > maxX) { pos.x = maxX; if (vel.x > 0f) vel.x = 0f; clamped = true; }
+
+            if (pos.y < minY) { pos.y = minY; if (vel.y < 0f) vel.y = 0f; clamped = true; }
+            else if (pos.y > maxY) { pos.y = maxY; if (vel.y > 0f) vel.y = 0f; clamped = true; }
+
+            if (clamped)
+            {
+                rb.position = pos;
+                rb.linearVelocity = vel;
             }
         }
         #endregion

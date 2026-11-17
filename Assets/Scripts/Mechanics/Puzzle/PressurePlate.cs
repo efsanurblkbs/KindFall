@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using KindFall.Core.Interfaces;
+using KindFall.Player.Dragon;
 using KindFall.Player.Princess;
 
 namespace KindFall.Mechanics.Puzzle
@@ -16,6 +17,9 @@ namespace KindFall.Mechanics.Puzzle
         [Header("Algılama Ayarları")]
         [Tooltip("İşaretliyse yalnızca Prenses karakteri butonu tetikleyebilir; kapalıysa Heavy katmanındaki nesneler de basabilir.")]
         [SerializeField] private bool onlyPrincess = false;
+
+        [Tooltip("İşaretliyse Yavru Ejderha da butonun üzerine alçalarak aktive edebilir.")]
+        [SerializeField] private bool allowDragon = true;
 
         [Tooltip("Ağır nesneler için katman maskesi (onlyPrincess kapalıyken kullanılır)")]
         [SerializeField] private LayerMask heavyObjectLayer;
@@ -128,6 +132,11 @@ namespace KindFall.Mechanics.Puzzle
             if (other == null) return false;
 
             if (other.GetComponentInParent<PrincessController>() != null)
+            {
+                return true;
+            }
+
+            if (allowDragon && other.GetComponentInParent<DragonController>() != null)
             {
                 return true;
             }
